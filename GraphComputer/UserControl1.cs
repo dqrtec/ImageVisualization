@@ -36,6 +36,8 @@ namespace GraphComputer
             _cenario.AddLuz(GetLuz());
 
             Draw();
+
+            this.MouseWheel += new MouseEventHandler(MoveCam_MouseWheel);
         }
 
         void ClearScreen()
@@ -87,16 +89,6 @@ namespace GraphComputer
             */
         }
 
-        bool hit_sphere(Position center, double radius, Ray r)
-        {
-            Position oc = r.origin - center;
-            var a = Position.dot(r.direction, r.direction);
-            var b = 2.0 * Position.dot(oc, r.direction);
-            var c = Position.dot(oc, oc) - radius * radius;
-            var discriminant = b * b - 4 * a * c;
-            return (discriminant >= 0);
-        }
-
         List<Luzes> GetLuz()
         {
             List<Luzes> luzes = new List<Luzes>();
@@ -141,6 +133,21 @@ namespace GraphComputer
                         move.PosY = 0.1;
                         break;
                     }
+            }
+            _camera.position = _camera.position + move;
+            Draw();
+        }
+
+        private void MoveCam_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            Position move = new Position(0, 0, 0);
+            if(e.Delta > 0)
+            {
+                move.PosZ = -1;// e.Delta;
+            }
+            else
+            {
+                move.PosZ = 1;// e.Delta;
             }
             _camera.position = _camera.position + move;
             Draw();
