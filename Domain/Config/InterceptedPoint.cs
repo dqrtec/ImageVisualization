@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Domain.Objects;
-
-namespace Domain.Config
+﻿namespace Domain.Config
 {
     public class InterceptedPoint
     {
@@ -13,13 +6,14 @@ namespace Domain.Config
         public Position? position;
         public Position? normal;
         public double? distance;
-        
-        public InterceptedPoint(Domain.Objects.Objects? objects, Position? position, Position? normal, double? distance)
+        public Ray ray;
+        public InterceptedPoint(Domain.Objects.Objects? objects, Position? position, Position? normal, double? distance, Ray ray)
         {
             this.objects = objects;
             this.position = position;
             this.normal = normal;
             this.distance = distance;
+            this.ray = ray;
         }
     }
 }

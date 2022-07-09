@@ -9,8 +9,8 @@ namespace GraphComputer
     public partial class UserControl1 : UserControl
     {
         #region Propertis
-        Bitmap _canvas;
-        Camera _camera;
+        readonly Bitmap _canvas;
+        readonly Camera _camera;
         Cenario _cenario;
 
         private static UserControl1? _instance { get; set; }
@@ -28,7 +28,6 @@ namespace GraphComputer
         {
             InitializeComponent();
             _canvas = new Bitmap(this.Size.Width, this.Size.Height);
-
 
             _camera = new CameraPerspectiva(new Position(0, 0, 0), new Position(0, 0, 0), new Position(0, 1, 0));
             _cenario = new Cenario();
@@ -50,11 +49,7 @@ namespace GraphComputer
         {
             ClearScreen();
 
-            var aspect_ratio = 16.0 / 9.0;
-            var image_width = 400;
-            var image_height = (int)(image_width / aspect_ratio);
-
-            _camera.SetScreen(image_width, image_height);
+            (int image_width, int image_height) = _camera.SetScreen();
 
             for (int j = image_height - 1; j >= 0; --j)
             {
@@ -75,35 +70,80 @@ namespace GraphComputer
 
         Color getcor(InterceptedPoint interceptedPoint)
         {
-            return interceptedPoint.objects.material.color.GetValueOrDefault();
-            /*
-            if (hit_sphere(new Position(0, 0, -1), 0.5, r))
-                return Color.FromArgb(255, 0, 0);
+            Color ResultColor = Color.White;
+            Color cor = interceptedPoint.objects.material.color.GetValueOrDefault();
+            (double r, double g, double b) = (cor.R * interceptedPoint.objects.material.Ka, cor.G * interceptedPoint.objects.material.Ka, cor.B * interceptedPoint.objects.material.Ka);
 
-            Position unit_direction = (r.direction);
-            double t = 0.5 * (unit_direction.PosY + 1.0);
-            Position c = new Position(1.0, 1.0, 1.0) * (1.0 - t) + new Position(0.5, 0.7, 1.0) * t;
-            c = c * 255;
-            var cor = Color.FromArgb((int)c.PosX, (int)c.PosY, (int)c.PosZ);
-            return cor;
-            */
+            foreach (var luz in _cenario._luzes)
+            {
+                //var trajetoraLuz = interceptedPoint.position - luz.position;
+                //Ray ray = new Ray(luz.position, trajetoraLuz);
+                //if (!_cenario.HasObjectBetween(ray, interceptedPoint.objects))
+                //{
+
+                //diferencial
+                var L = (luz.position - interceptedPoint.position).Normalize();
+                double fatorDiferencial = Position.dot(interceptedPoint.normal.Normalize(), L.Normalize());
+                if (fatorDiferencial < 0)
+                    fatorDiferencial = 0;
+
+                //difusa
+                r += luz.cor.R * fatorDiferencial * interceptedPoint.objects.material.difuse.PosX * interceptedPoint.objects.material.Kd;
+                g += luz.cor.G * fatorDiferencial * interceptedPoint.objects.material.difuse.PosY * interceptedPoint.objects.material.Kd;
+                b += luz.cor.B * fatorDiferencial * interceptedPoint.objects.material.difuse.PosZ * interceptedPoint.objects.material.Kd;
+
+                //reflexao
+                
+                Position reflexao = reflects(L, interceptedPoint.normal);
+                double fatorEspecular = Position.dot(interceptedPoint.ray.direction, reflexao);
+                if (fatorEspecular < 0)
+                    fatorEspecular = 0;
+
+                //especular
+                r += luz.cor.R * Math.Pow(fatorEspecular, interceptedPoint.objects.material.k) * interceptedPoint.objects.material.especular.PosX * interceptedPoint.objects.material.Ks;
+                g += luz.cor.G * Math.Pow(fatorEspecular, interceptedPoint.objects.material.k) * interceptedPoint.objects.material.especular.PosY * interceptedPoint.objects.material.Ks;
+                b += luz.cor.B * Math.Pow(fatorEspecular, interceptedPoint.objects.material.k) * interceptedPoint.objects.material.especular.PosZ * interceptedPoint.objects.material.Ks;
+                
+
+                ResultColor = NormalizeColor((int)r, (int)g, (int)b);
+                //}
+            }
+            return ResultColor;
+        }
+
+        Color NormalizeColor(double r, double g, double b)
+        {
+            return Color.FromArgb(
+                r > 255 ? 255 : (int)r,
+                g > 255 ? 255 : (int)g,
+                b > 255 ? 255 : (int)b);
+        }
+
+        Position reflects(Position raio, Position norm)
+        {
+            raio.PosX *= -1.0;
+            raio.PosY *= -1.0;
+            raio.PosZ *= -1.0;
+            Position reflect = raio - (norm * (2.0 * Position.dot(raio, norm)));
+            reflect.Normalize();
+            return reflect;
         }
 
         List<Luzes> GetLuz()
         {
-            List<Luzes> luzes = new List<Luzes>();
-
-            LuzPontual pontual = new LuzPontual(new Domain.Config.Position(10, 10, 5));
-
+            List<Luzes> luzes = new List<Luzes>
+            {
+                new LuzPontual(new Domain.Config.Position(1, 10, -1))
+            };
             return luzes;
         }
         List<Objects> GetObjects()
         {
-            List<Objects> objects = new List<Objects>();
-
-            objects.Add(new Circulo(new Position(0, 0, -1), 0.5, new Material(Color.FromArgb(255, 0, 0))));
-
-            objects.Add(new Circulo(new Position(0, -7, -1), 5, new Material(Color.FromArgb(0, 255, 0))));
+            List<Objects> objects = new List<Objects>()
+            {
+                new Circulo(new Position(0, 0, -1), 0.5, new Material(Color.FromArgb(100, 10, 10))),
+                //new Circulo(new Position(0, -7, -1), 5, new Material(Color.FromArgb(0, 255, 0)))
+            };
 
             return objects;
         }
@@ -138,10 +178,10 @@ namespace GraphComputer
             Draw();
         }
 
-        private void MoveCam_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        private void MoveCam_MouseWheel(object? sender, System.Windows.Forms.MouseEventArgs e)
         {
             Position move = new Position(0, 0, 0);
-            if(e.Delta > 0)
+            if (e.Delta > 0)
             {
                 move.PosZ = -1;// e.Delta;
             }

@@ -5,15 +5,15 @@ namespace Domain.Luzes
 {
     public class Luzes
     {
-        Position position;
-        Color cor = Color.White;
-        double intensidade;
-        double decaimento;
+        public Position position;
+        public Color cor = Color.White;
+        public double intensidade;
+        public double decaimento;
 
         public Luzes(Position position)
         {
             this.position = position;
-            this.cor = new Color();
+            this.cor = Color.White;
             this.intensidade = 100;
             this.decaimento = 1;
         }

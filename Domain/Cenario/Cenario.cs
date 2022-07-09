@@ -5,7 +5,7 @@ namespace Domain.Cenario
     public class Cenario
     {
         List<Objects.Objects> _objects = new List<Objects.Objects>();
-        List<Luzes.Luzes> _luzes = new List<Luzes.Luzes>();
+        public List<Luzes.Luzes> _luzes = new List<Luzes.Luzes>();
 
         public bool Intersept(Ray ray, out InterceptedPoint? interceptPoint)
         {
@@ -16,7 +16,7 @@ namespace Domain.Cenario
             {
                 if (obj.Intersept(ray, out InterceptedPoint? newIntercept))
                 {
-                    if(interceptPoint == null || newIntercept?.distance.GetValueOrDefault() < interceptPoint.distance.GetValueOrDefault())
+                    if (interceptPoint == null || newIntercept?.distance.GetValueOrDefault() < interceptPoint.distance.GetValueOrDefault())
                     {
                         interceptPoint = newIntercept;
                         isIntercepted = true;
@@ -25,6 +25,18 @@ namespace Domain.Cenario
             }
 
             return isIntercepted;
+        }
+
+        public bool HasObjectBetween(Ray ray, Objects.Objects objectIntercepted)
+        {
+            bool result = false;
+
+            Intersept(ray, out InterceptedPoint? interPoint);
+
+            if (interPoint?.objects != objectIntercepted)
+                result = true;
+
+            return result;
         }
 
         public void AddObjects(List<Objects.Objects> objects)
@@ -42,6 +54,10 @@ namespace Domain.Cenario
         public void AddLuz(Luzes.Luzes luz)
         {
             _luzes.Add(luz);
+        }
+        public List<Luzes.Luzes> GetLuzes()
+        {
+            return _luzes.ToList();
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Domain.Objects
                 double menorT = (t0 < t1) ? t0 : t1;
 
                 var pointHited = ray.origin + ray.direction * menorT;
-                interceptedPoint = new InterceptedPoint(this, pointHited, GetNormal(pointHited), menorT);
+                interceptedPoint = new InterceptedPoint(this, pointHited, GetNormal(pointHited), menorT, ray);
                 isIntercepted = true;
             }
             else if (discriminant == 0)
@@ -39,7 +39,7 @@ namespace Domain.Objects
                 double dist = -b / (2 * a);
 
                 var pointHited = ray.origin + ray.direction * dist;
-                interceptedPoint = new InterceptedPoint(this, pointHited, GetNormal(pointHited), dist);
+                interceptedPoint = new InterceptedPoint(this, pointHited, GetNormal(pointHited), dist, ray);
                 isIntercepted = true;
             }
 

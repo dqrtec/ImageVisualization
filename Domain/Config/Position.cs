@@ -35,11 +35,11 @@
         {
             return new Position(a.PosX * b, a.PosY * b, a.PosZ * b);
         }
-        public static Position operator *(Position a,double b)
+        public static Position operator *(Position a, double b)
         {
             return b * a;
         }
-        public static double dot(Position a, Position b)
+        public static double dot(Position a, Position b) // produto escalar
         {
             return a.PosX * b.PosX + a.PosY * b.PosY + a.PosZ * b.PosZ;
         }
